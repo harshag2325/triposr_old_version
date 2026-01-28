@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Image Blending + 3D Viewer</title>
+
+    <!-- Fabric.js (2D canvas) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.2.4/fabric.min.js"></script>
+
+    <!-- three.js + loaders (local files) -->
+    <script src="/static/js/three.min.js"></script>
+    <script src="/static/js/OBJLoader.js"></script>
+    <script src="/static/js/OrbitControls.js"></script>
+
+    <style>
+      body { font-family: Arial, sans-serif; padding: 12px; }
+      #canvas-wrapper { position: relative; display: inline-block; }
+      #threeCanvasInFabric { box-sizing: border-box; }
+      .controls { margin-top: 8px; }
+      .btn { margin-right: 6px; }
+      .small { font-size: 0.9rem; color: #444; }
+      #fg-options { margin-top: 6px; margin-bottom: 12px; }
+    </style>
+  </head>
+
+  <body>
+    <h1>Image Blending + 3D Viewer</h1>
+
+    <p>
+      1. Choose background and foreground images (or generate foreground with a prompt).<br />
+      2. Click "Upload" to load them into the editor.<br />
+      3. Drag/resize the foreground on the canvas.<br />
+      4. Click "Generate 3D" to create and preview a 3D model (OBJ).<br />
+      5. (Optional) Rotate the 3D model and click "Use 3D view as foreground".<br />
+      6. Click "Blend" to make the final 2D image.
+    </p>
+
+    <h2>Upload</h2>
+    <div>
+      <label>Background: </label>
+      <input type="file" id="img1" /><br /><br />
+
+      <div id="fg-options">
+        <label><strong>Foreground source:</strong></label><br />
+        <input type="radio" name="fg_source" id="fg_file_radio" value="file" checked>
+        <label for="fg_file_radio">Upload image file</label>
+        &nbsp;&nbsp;
+        <input type="radio" name="fg_source" id="fg_prompt_radio" value="prompt">
+        <label for="fg_prompt_radio">Generate from prompt (SDXL)</label>
+        <br /><br />
+
+        <!-- file input (default) -->
+        <div id="fg_file_block">
+          <label>Foreground: </label>
+          <input type="file" id="img2" /><br /><br />
+        </div>
+
+        <!-- prompt block (hidden by default) -->
+        <div id="fg_prompt_block" style="display:none;">
+          <label>Foreground prompt:</label><br />
+          <input type="text" id="fgPrompt" placeholder="e.g., modern wooden office chair" style="width:320px;">
+          <select id="fgShadowChoice" title="Shadow option">
+            <option value="0">No shadow (clean)</option>
+            <option value="1">Keep natural shadow (realistic)</option>
+          </select>
+          <button class="btn" onclick="generateForegroundFromPrompt()">Generate Foreground</button>
+          <div class="small">Tip: use descriptive prompts, e.g. "mid-century wooden chair, brown leather cushion, studio lighting"</div>
+          <br /><br />
+        </div>
+      </div>
+
+      <button class="btn" onclick="uploadImages()">Upload</button>
+    </div>
+
+    <h2>2D Canvas</h2>
+
+    <!-- canvas wrapper (position:relative) so overlays align properly -->
+    <div id="canvas-wrapper">
+      <canvas id="c" width="900" height="550"></canvas>
+    </div>
+
+    <div class="controls">
+      <button class="btn" onclick="captureThenBlend()">Blend</button>
+      <button class="btn" onclick="downloadFinal()">Download Final</button>
+      <button class="btn" onclick="resetCanvas()">Reset Canvas</button>
+      <button class="btn" onclick="generate3DAndUse()">Generate 3D</button>
+      <button class="btn" onclick="place3DModelInCanvas()">Place Rotatable 3D in Canvas</button>
+    </div>
+
+    <h3>Final 2D Result</h3>
+    <img id="final-img" style="display: none; max-width:100%;" />
+
+    <h2>3D Preview</h2>
+    <div id="viewer3d" style="width: 400px; height: 300px; border: 1px solid black;"></div>
+
+    <div class="controls" style="margin-top:8px;">
+      <button class="btn" onclick="capture3DToForeground()">Use 3D view as foreground</button>
+    </div>
+
+    <div id="model-block" style="display: none; margin-top:10px;">
+      <span>3D model: </span>
+      <a id="model-link" href="#" download>Download OBJ</a>
+    </div>
+
+    <!-- application logic -->
+    <script src="/static/js/editor.js"></script>
+    
+
+    <script>
+      // small UI toggle logic to show/hide prompt block
+      document.getElementById('fg_file_radio').addEventListener('change', function() {
+        document.getElementById('fg_file_block').style.display = 'block';
+        document.getElementById('fg_prompt_block').style.display = 'none';
+      });
+      document.getElementById('fg_prompt_radio').addEventListener('change', function() {
+        document.getElementById('fg_file_block').style.display = 'none';
+        document.getElementById('fg_prompt_block').style.display = 'block';
+      });
+    </script>
+  </body>
+</html>
